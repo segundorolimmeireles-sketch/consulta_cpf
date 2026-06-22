@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Boletos - Neon</title>
+    <title>Consulta de Boletos</title>
     <style>
         * {
             margin: 0;
@@ -211,22 +211,40 @@
             font-weight: 600;
         }
 
-        .status-badge {
+        .tipo-badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
+            padding: 5px 12px;
+            border-radius: 15px;
             font-size: 12px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .badge-pago {
+        /* Cores para diferentes tipos */
+        .tipo-pago {
             background: #00b89420;
             color: #00b894;
         }
 
-        .badge-pendente {
+        .tipo-pendente {
+            background: #fdcb6e20;
+            color: #f39c12;
+        }
+
+        .tipo-vencido {
             background: #d6303120;
             color: #d63031;
+        }
+
+        .tipo-cancelado {
+            background: #636e7220;
+            color: #636e72;
+        }
+
+        .tipo-default {
+            background: #0984e320;
+            color: #0984e3;
         }
 
         .empty-state {
@@ -235,7 +253,7 @@
             color: #999;
         }
 
-        .empty-state i {
+        .empty-state .icon {
             font-size: 60px;
             margin-bottom: 20px;
             display: block;
@@ -245,65 +263,6 @@
             font-size: 20px;
             margin-bottom: 10px;
             color: #666;
-        }
-
-        .neon-console {
-            background: #0a0a0a;
-            color: #00ff00;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            max-height: 300px;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        .neon-console-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #00ff0030;
-        }
-
-        .neon-console h3 {
-            color: #00ff00;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-dot.online {
-            background: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .console-line {
-            margin: 3px 0;
-            opacity: 0.9;
-        }
-
-        .console-time {
-            color: #666;
-            margin-right: 10px;
         }
 
         .loading-spinner {
@@ -334,22 +293,33 @@
         .suggestions {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .suggestion-tag {
             background: #f0f0f0;
-            padding: 5px 15px;
-            border-radius: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
             cursor: pointer;
             font-size: 13px;
             transition: all 0.3s;
+            border: 1px solid transparent;
         }
 
         .suggestion-tag:hover {
-            background: #667eea20;
+            background: #667eea15;
             color: #667eea;
+            border-color: #667eea30;
+        }
+
+        .footer-info {
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+            font-size: 12px;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -359,7 +329,6 @@
         <div class="header">
             <h1>
                 🔍 Consulta de Boletos
-                <span style="font-size: 14px; color: #666;">| Neon Database</span>
             </h1>
             <p class="subtitle">Pesquise por CPF, Nome do Cliente ou Contato</p>
             
@@ -383,10 +352,10 @@
             </div>
 
             <div class="suggestions">
-                <span style="color: #999; font-size: 13px;">Sugestões:</span>
-                <span class="suggestion-tag" onclick="pesquisaRapida('123')">Buscar por CPF</span>
-                <span class="suggestion-tag" onclick="pesquisaRapida('Maria')">Buscar por Nome</span>
-                <span class="suggestion-tag" onclick="pesquisaRapida('119')">Buscar por Contato</span>
+                <span style="color: #999; font-size: 13px;">💡 Exemplos:</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('123.456.789-00')">Buscar por CPF</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('João')">Buscar por Nome</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('(11) 99999')">Buscar por Contato</span>
             </div>
         </div>
 
@@ -413,16 +382,16 @@
                             <th>Pago</th>
                             <th>Resta</th>
                             <th>Data Vencimento</th>
-                            <th>Status</th>
+                            <th>Tipo (Status)</th>
                         </tr>
                     </thead>
                     <tbody id="corpoTabela">
                         <tr>
                             <td colspan="9">
                                 <div class="empty-state">
-                                    <span style="font-size: 60px;">🔍</span>
+                                    <span class="icon">🔍</span>
                                     <h3>Digite um CPF, nome ou contato para buscar</h3>
-                                    <p style="color: #999;">Os resultados aparecerão aqui</p>
+                                    <p>Os resultados aparecerão aqui</p>
                                 </div>
                             </td>
                         </tr>
@@ -431,34 +400,60 @@
             </div>
         </div>
 
-        <!-- Console do Neon -->
-        <div class="neon-console" id="neonConsole">
-            <div class="neon-console-header">
-                <h3>
-                    <span class="status-dot online"></span>
-                    Neon Console
-                </h3>
-                <span style="color: #666; font-size: 12px;">PostgreSQL</span>
-            </div>
-            <div id="consoleLog"></div>
+        <div class="footer-info">
+            Conectado ao Neon Database • Dados em tempo real
         </div>
     </div>
 
     <script>
-        let currentSearch = '';
+        // Função para formatar valor monetário, retorna vazio se for NaN
+        function formatarMoeda(valor) {
+            if (valor === null || valor === undefined || valor === '') return '';
+            const numero = parseFloat(valor);
+            if (isNaN(numero)) return '';
+            return 'R$ ' + numero.toFixed(2);
+        }
 
-        function logConsole(message, type = 'info') {
-            const consoleDiv = document.getElementById('consoleLog');
-            const time = new Date().toLocaleTimeString();
-            const colors = {
-                info: '#00ff00',
-                error: '#ff4444',
-                success: '#00ff00',
-                warning: '#ffaa00'
-            };
-            const color = colors[type] || '#00ff00';
-            consoleDiv.innerHTML += `<div class="console-line"><span class="console-time">[${time}]</span> <span style="color: ${color}">${message}</span></div>`;
-            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        // Função para verificar se valor é válido
+        function valorValido(valor) {
+            if (valor === null || valor === undefined || valor === '') return false;
+            const numero = parseFloat(valor);
+            return !isNaN(numero);
+        }
+
+        // Função para formatar CPF
+        function formatarCPF(cpf) {
+            if (!cpf || cpf === 'null' || cpf === 'NaN' || cpf === 'undefined') return '';
+            const numeros = cpf.replace(/\D/g, '');
+            if (numeros.length === 11) {
+                return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+            return cpf;
+        }
+
+        // Função para limpar campos vazios/inválidos
+        function limparCampo(valor) {
+            if (!valor || valor === 'null' || valor === 'NaN' || valor === 'undefined' || valor === 'nan') return '';
+            return valor;
+        }
+
+        // Função para determinar a classe CSS baseada no tipo
+        function getTipoClass(tipo) {
+            if (!tipo) return 'tipo-default';
+            
+            const tipoLower = tipo.toLowerCase().trim();
+            
+            if (tipoLower.includes('pago') || tipoLower.includes('quitado') || tipoLower.includes('liquidado')) {
+                return 'tipo-pago';
+            } else if (tipoLower.includes('pendente') || tipoLower.includes('aberto') || tipoLower.includes('aguardando')) {
+                return 'tipo-pendente';
+            } else if (tipoLower.includes('vencido') || tipoLower.includes('atrasado')) {
+                return 'tipo-vencido';
+            } else if (tipoLower.includes('cancelado') || tipoLower.includes('baixado')) {
+                return 'tipo-cancelado';
+            } else {
+                return 'tipo-default';
+            }
         }
 
         function pesquisaRapida(termo) {
@@ -474,19 +469,15 @@
             const resultInfo = document.getElementById('resultInfo');
             
             if (!termo) {
-                logConsole('⚠️ Por favor, digite um termo para busca', 'warning');
+                alert('Por favor, digite um CPF, nome ou contato para buscar');
                 return;
             }
-
-            currentSearch = termo;
             
             // Mostrar loading
             btnBuscar.disabled = true;
             btnBuscar.textContent = 'Buscando...';
             spinner.style.display = 'inline-block';
             resultInfo.classList.add('show');
-            
-            logConsole(`🔍 Iniciando busca por: "${termo}"`, 'info');
             
             try {
                 const response = await fetch(`/api/buscar?termo=${encodeURIComponent(termo)}`);
@@ -497,8 +488,6 @@
                 }
                 
                 const dados = result.dados;
-                
-                logConsole(`✅ Busca concluída! ${dados.length} registro(s) encontrado(s)`, 'success');
                 
                 // Atualizar info
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
@@ -512,42 +501,46 @@
                         <tr>
                             <td colspan="9">
                                 <div class="empty-state">
-                                    <span style="font-size: 60px;">😕</span>
+                                    <span class="icon">😕</span>
                                     <h3>Nenhum resultado encontrado</h3>
-                                    <p style="color: #999;">Tente buscar com outro termo</p>
+                                    <p>Tente buscar com outro termo</p>
                                 </div>
                             </td>
                         </tr>
                     `;
-                    logConsole('📭 Nenhum registro encontrado', 'warning');
                 } else {
                     // Preencher tabela
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
+                        // Tratar valores NaN
                         const valorTotal = parseFloat(boleto.valor_total || 0);
                         const pago = parseFloat(boleto.pago || 0);
                         const resta = parseFloat(boleto.resta || 0);
-                        const dataVencimento = boleto.data_vencimento ? 
-                            new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : 'N/A';
                         
-                        const status = resta <= 0 ? 'Pago' : 'Pendente';
-                        const badgeClass = resta <= 0 ? 'badge-pago' : 'badge-pendente';
+                        const dataVencimento = boleto.data_vencimento ? 
+                            new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
+                        
+                        // Pegar o tipo do banco
+                        const tipo = limparCampo(boleto.tipo);
+                        const tipoClass = getTipoClass(tipo);
                         
                         tr.innerHTML = `
-                            <td class="cpf-cell">${boleto.cpf || 'N/A'}</td>
-                            <td><strong>${boleto.nome_completo || 'N/A'}</strong></td>
-                            <td>${boleto.contato || 'N/A'}</td>
-                            <td>${boleto.contato2 || 'N/A'}</td>
-                            <td class="valor-cell">R$ ${valorTotal.toFixed(2)}</td>
-                            <td class="valor-cell ${pago > 0 ? 'status-pago' : 'status-pendente'}">
-                                R$ ${pago.toFixed(2)}
+                            <td class="cpf-cell">${formatarCPF(limparCampo(boleto.cpf))}</td>
+                            <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
+                            <td>${limparCampo(boleto.contato)}</td>
+                            <td>${limparCampo(boleto.contato2)}</td>
+                            <td class="valor-cell">${formatarMoeda(valorTotal)}</td>
+                            <td class="valor-cell ${valorValido(pago) && pago > 0 ? 'status-pago' : ''}">
+                                ${formatarMoeda(pago)}
                             </td>
-                            <td class="valor-cell ${resta > 0 ? 'status-pendente' : 'status-pago'}">
-                                R$ ${resta.toFixed(2)}
+                            <td class="valor-cell ${valorValido(resta) && resta > 0 ? 'status-pendente' : ''}">
+                                ${formatarMoeda(resta)}
                             </td>
                             <td>${dataVencimento}</td>
-                            <td><span class="status-badge ${badgeClass}">${status}</span></td>
+                            <td>
+                                ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}
+                            </td>
                         `;
                         
                         tbody.appendChild(tr);
@@ -556,7 +549,6 @@
                 
             } catch (error) {
                 console.error('Erro:', error);
-                logConsole(`❌ Erro: ${error.message}`, 'error');
                 
                 tbody.innerHTML = `
                     <tr>
@@ -584,39 +576,18 @@
                 <tr>
                     <td colspan="9">
                         <div class="empty-state">
-                            <span style="font-size: 60px;">🔍</span>
+                            <span class="icon">🔍</span>
                             <h3>Digite um CPF, nome ou contato para buscar</h3>
-                            <p style="color: #999;">Os resultados aparecerão aqui</p>
+                            <p>Os resultados aparecerão aqui</p>
                         </div>
                     </td>
                 </tr>
             `;
-            
-            logConsole('🔄 Busca limpa', 'info');
-        }
-
-        // Testar conexão ao carregar
-        async function testarConexao() {
-            logConsole('🚀 Sistema iniciado', 'info');
-            logConsole('📡 Testando conexão com Neon...', 'info');
-            
-            try {
-                const response = await fetch('/api/teste-conexao');
-                const result = await response.json();
-                
-                if (result.success) {
-                    logConsole('✅ Conexão com Neon estabelecida!', 'success');
-                    logConsole(`⏰ Timestamp do servidor: ${result.timestamp}`, 'info');
-                }
-            } catch (error) {
-                logConsole('❌ Erro de conexão com o servidor', 'error');
-            }
         }
 
         // Foco no input ao carregar
         window.onload = () => {
             document.getElementById('searchInput').focus();
-            testarConexao();
         };
     </script>
 </body>

@@ -43,6 +43,7 @@ app.get('/api/buscar', async (req, res) => {
         recebido as pago, 
         resta, 
         dt_vencimento as data_vencimento,
+        tipo,
         endereco,
         referencia,
         obs,
@@ -77,24 +78,6 @@ app.get('/api/buscar', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Erro ao buscar dados no banco',
-      error: err.message 
-    });
-  }
-});
-
-// Rota de teste de conexão
-app.get('/api/teste-conexao', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ 
-      success: true, 
-      message: 'Conexão com Neon funcionando!',
-      timestamp: result.rows[0].now 
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Erro de conexão com Neon',
       error: err.message 
     });
   }
