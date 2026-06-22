@@ -39,9 +39,9 @@ app.get('/api/buscar', async (req, res) => {
         nome_cliente as nome_completo,
         contato_cliente as contato,
         contato_cliente2 as contato2,
-        valor_cod as "Valor Total", 
-        recebido as "Pago", 
-        resta as "Resta", 
+        valor_cod as valor_total, 
+        recebido as pago, 
+        resta, 
         dt_vencimento as data_vencimento,
         tipo,
         endereco,
@@ -65,6 +65,7 @@ app.get('/api/buscar', async (req, res) => {
     `, [`%${termoLimpo}%`, termoLimpo]);
     
     console.log(`🔍 Busca realizada: "${termoLimpo}" - ${result.rows.length} resultados`);
+    console.log('Primeiro resultado:', result.rows[0]); // Debug
     
     res.json({ 
       success: true, 

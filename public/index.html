@@ -415,18 +415,15 @@
             return 'R$ ' + numero.toFixed(2);
         }
 
-        // Função para ocultar parte do CPF (mostra só primeiros e últimos dígitos)
+        // Função para ocultar parte do CPF
         function formatarCPFOculto(cpf) {
             if (!cpf || cpf === 'null' || cpf === 'NaN' || cpf === 'undefined') return '';
             
-            // Remove caracteres não numéricos
             const numeros = cpf.replace(/\D/g, '');
             
             if (numeros.length === 11) {
-                // Formato: 123.***.***-99
                 return numeros.substring(0, 3) + '.***.***-' + numeros.substring(9, 11);
             } else if (numeros.length > 4) {
-                // Para outros tamanhos, mostra primeiros 3 e últimos 2
                 const inicio = numeros.substring(0, 3);
                 const fim = numeros.substring(numeros.length - 2);
                 const meio = '*'.repeat(numeros.length - 5);
@@ -494,6 +491,8 @@
                 
                 const dados = result.dados;
                 
+                console.log('Dados recebidos:', dados); // Debug
+                
                 // Atualizar info
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
                 document.getElementById('resultTerm').textContent = `para: "${termo}"`;
@@ -518,10 +517,12 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        // Usar os novos nomes das colunas
-                        const valorTotal = boleto['Valor Total'];
-                        const pago = boleto['Pago'];
-                        const resta = boleto['Resta'];
+                        // Pegar os valores diretamente (nomes corrigidos no SQL)
+                        const valorTotal = boleto.valor_total;
+                        const pago = boleto.pago;
+                        const resta = boleto.resta;
+                        
+                        console.log('Valores:', { valorTotal, pago, resta }); // Debug
                         
                         const dataVencimento = boleto.data_vencimento ? 
                             new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
