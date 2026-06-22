@@ -194,20 +194,11 @@
         .cpf-cell {
             font-family: 'Courier New', monospace;
             font-weight: 600;
+            letter-spacing: 1px;
         }
 
         .valor-cell {
             text-align: right;
-            font-weight: 600;
-        }
-
-        .status-pago {
-            color: #00b894;
-            font-weight: 600;
-        }
-
-        .status-pendente {
-            color: #d63031;
             font-weight: 600;
         }
 
@@ -221,7 +212,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Cores para diferentes tipos */
         .tipo-pago {
             background: #00b89420;
             color: #00b894;
@@ -321,6 +311,13 @@
             font-size: 12px;
             opacity: 0.8;
         }
+
+        .search-type-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -330,14 +327,14 @@
             <h1>
                 🔍 Consulta de Boletos
             </h1>
-            <p class="subtitle">Pesquise por CPF, Nome do Cliente ou Contato</p>
+            <p class="subtitle">Pesquise por CPF (parcial), Nome Exato ou Contato</p>
             
             <div class="search-container">
                 <div class="search-box">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Digite CPF, Nome ou Contato..."
+                        placeholder="Digite CPF, Nome Completo ou Contato..."
                         autocomplete="off"
                         onkeypress="if(event.key === 'Enter') buscarDados()"
                     >
@@ -351,10 +348,14 @@
                 </button>
             </div>
 
+            <p class="search-type-info">
+                ⚠️ CPF: busca parcial (ex: 123) | Nome: busca exata | Contato: busca parcial
+            </p>
+
             <div class="suggestions">
                 <span style="color: #999; font-size: 13px;">💡 Exemplos:</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('123.456.789-00')">Buscar por CPF</span>
-                <span class="suggestion-tag" onclick="pesquisaRapida('João')">Buscar por Nome</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('João Silva')">Buscar por Nome Exato</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('(11) 99999')">Buscar por Contato</span>
             </div>
         </div>
@@ -406,7 +407,7 @@
     </div>
 
     <script>
-        // Função para formatar valor monetário, retorna vazio se for NaN
+        // Função para formatar valor monetário
         function formatarMoeda(valor) {
             if (valor === null || valor === undefined || valor === '') return '';
             const numero = parseFloat(valor);
@@ -414,20 +415,24 @@
             return 'R$ ' + numero.toFixed(2);
         }
 
-        // Função para verificar se valor é válido
-        function valorValido(valor) {
-            if (valor === null || valor === undefined || valor === '') return false;
-            const numero = parseFloat(valor);
-            return !isNaN(numero);
-        }
-
-        // Função para formatar CPF
-        function formatarCPF(cpf) {
+        // Função para ocultar parte do CPF (mostra só primeiros e últimos dígitos)
+        function formatarCPFOculto(cpf) {
             if (!cpf || cpf === 'null' || cpf === 'NaN' || cpf === 'undefined') return '';
+            
+            // Remove caracteres não numéricos
             const numeros = cpf.replace(/\D/g, '');
+            
             if (numeros.length === 11) {
-                return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                // Formato: 123.***.***-99
+                return numeros.substring(0, 3) + '.***.***-' + numeros.substring(9, 11);
+            } else if (numeros.length > 4) {
+                // Para outros tamanhos, mostra primeiros 3 e últimos 2
+                const inicio = numeros.substring(0, 3);
+                const fim = numeros.substring(numeros.length - 2);
+                const meio = '*'.repeat(numeros.length - 5);
+                return inicio + '.' + meio + '.' + fim;
             }
+            
             return cpf;
         }
 
@@ -513,10 +518,10 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        // Tratar valores NaN
-                        const valorTotal = parseFloat(boleto.valor_total || 0);
-                        const pago = parseFloat(boleto.pago || 0);
-                        const resta = parseFloat(boleto.resta || 0);
+                        // Usar os novos nomes das colunas
+                        const valorTotal = boleto['Valor Total'];
+                        const pago = boleto['Pago'];
+                        const resta = boleto['Resta'];
                         
                         const dataVencimento = boleto.data_vencimento ? 
                             new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
@@ -526,17 +531,13 @@
                         const tipoClass = getTipoClass(tipo);
                         
                         tr.innerHTML = `
-                            <td class="cpf-cell">${formatarCPF(limparCampo(boleto.cpf))}</td>
+                            <td class="cpf-cell" title="${limparCampo(boleto.cpf)}">${formatarCPFOculto(boleto.cpf)}</td>
                             <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
                             <td>${limparCampo(boleto.contato)}</td>
                             <td>${limparCampo(boleto.contato2)}</td>
                             <td class="valor-cell">${formatarMoeda(valorTotal)}</td>
-                            <td class="valor-cell ${valorValido(pago) && pago > 0 ? 'status-pago' : ''}">
-                                ${formatarMoeda(pago)}
-                            </td>
-                            <td class="valor-cell ${valorValido(resta) && resta > 0 ? 'status-pendente' : ''}">
-                                ${formatarMoeda(resta)}
-                            </td>
+                            <td class="valor-cell">${formatarMoeda(pago)}</td>
+                            <td class="valor-cell">${formatarMoeda(resta)}</td>
                             <td>${dataVencimento}</td>
                             <td>
                                 ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}

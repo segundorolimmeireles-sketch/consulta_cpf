@@ -39,9 +39,9 @@ app.get('/api/buscar', async (req, res) => {
         nome_cliente as nome_completo,
         contato_cliente as contato,
         contato_cliente2 as contato2,
-        valor_cod as valor_total, 
-        recebido as pago, 
-        resta, 
+        valor_cod as "Valor Total", 
+        recebido as "Pago", 
+        resta as "Resta", 
         dt_vencimento as data_vencimento,
         tipo,
         endereco,
@@ -57,12 +57,12 @@ app.get('/api/buscar', async (req, res) => {
       FROM public.tb_boletos 
       WHERE 
         cpf_pagador ILIKE $1 
-        OR nome_cliente ILIKE $1 
+        OR nome_cliente = $2
         OR contato_cliente ILIKE $1
         OR contato_cliente2 ILIKE $1
       ORDER BY dt_vencimento DESC
       LIMIT 50
-    `, [`%${termoLimpo}%`]);
+    `, [`%${termoLimpo}%`, termoLimpo]);
     
     console.log(`🔍 Busca realizada: "${termoLimpo}" - ${result.rows.length} resultados`);
     
