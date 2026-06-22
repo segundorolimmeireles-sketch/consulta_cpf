@@ -202,6 +202,16 @@
             font-weight: 600;
         }
 
+        .status-pago {
+            color: #00b894;
+            font-weight: 600;
+        }
+
+        .status-pendente {
+            color: #d63031;
+            font-weight: 600;
+        }
+
         .tipo-badge {
             display: inline-block;
             padding: 5px 12px;
@@ -318,6 +328,40 @@
             margin-top: 5px;
             font-style: italic;
         }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-card.total { border-left: 4px solid #667eea; }
+        .stat-card.pago { border-left: 4px solid #00b894; }
+        .stat-card.resta { border-left: 4px solid #d63031; }
+        .stat-card.quantidade { border-left: 4px solid #f39c12; }
     </style>
 </head>
 <body>
@@ -326,6 +370,7 @@
         <div class="header">
             <h1>
                 🔍 Consulta de Boletos
+                <span style="font-size: 14px; color: #666;">| Neon Database</span>
             </h1>
             <p class="subtitle">Pesquise por CPF (parcial), Nome Exato ou Contato</p>
             
@@ -357,6 +402,26 @@
                 <span class="suggestion-tag" onclick="pesquisaRapida('123.456.789-00')">Buscar por CPF</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('João Silva')">Buscar por Nome Exato</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('(11) 99999')">Buscar por Contato</span>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-container" id="statsContainer" style="display: none;">
+            <div class="stat-card quantidade">
+                <h4>📊 Total Encontrados</h4>
+                <div class="stat-value" id="statQuantidade">0</div>
+            </div>
+            <div class="stat-card total">
+                <h4>💰 Valor Total</h4>
+                <div class="stat-value" id="statValorTotal">R$ 0,00</div>
+            </div>
+            <div class="stat-card pago">
+                <h4>✅ Total Pago</h4>
+                <div class="stat-value" id="statPago">R$ 0,00</div>
+            </div>
+            <div class="stat-card resta">
+                <h4>⏳ Total Resta</h4>
+                <div class="stat-value" id="statResta">R$ 0,00</div>
             </div>
         </div>
 
@@ -407,12 +472,19 @@
     </div>
 
     <script>
-        // Função para formatar valor monetário
+        // Função para formatar valor monetário, retorna vazio se for NaN
         function formatarMoeda(valor) {
             if (valor === null || valor === undefined || valor === '') return '';
             const numero = parseFloat(valor);
             if (isNaN(numero)) return '';
             return 'R$ ' + numero.toFixed(2);
+        }
+
+        // Função para verificar se valor é válido
+        function valorValido(valor) {
+            if (valor === null || valor === undefined || valor === '') return false;
+            const numero = parseFloat(valor);
+            return !isNaN(numero);
         }
 
         // Função para ocultar parte do CPF
@@ -458,6 +530,36 @@
             }
         }
 
+        function atualizarEstatisticas(dados) {
+            const statsContainer = document.getElementById('statsContainer');
+            
+            if (dados.length === 0) {
+                statsContainer.style.display = 'none';
+                return;
+            }
+            
+            statsContainer.style.display = 'grid';
+            
+            let valorTotal = 0;
+            let totalPago = 0;
+            let totalResta = 0;
+            
+            dados.forEach(item => {
+                const vt = parseFloat(item.valor_total) || 0;
+                const pg = parseFloat(item.pago) || 0;
+                const rt = parseFloat(item.resta) || 0;
+                
+                valorTotal += vt;
+                totalPago += pg;
+                totalResta += rt;
+            });
+            
+            document.getElementById('statQuantidade').textContent = dados.length;
+            document.getElementById('statValorTotal').textContent = formatarMoeda(valorTotal);
+            document.getElementById('statPago').textContent = formatarMoeda(totalPago);
+            document.getElementById('statResta').textContent = formatarMoeda(totalResta);
+        }
+
         function pesquisaRapida(termo) {
             document.getElementById('searchInput').value = termo;
             buscarDados();
@@ -495,6 +597,9 @@
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
                 document.getElementById('resultTerm').textContent = `para: "${termo}"`;
                 
+                // Atualizar estatísticas
+                atualizarEstatisticas(dados);
+                
                 // Limpar tabela
                 tbody.innerHTML = '';
                 
@@ -515,18 +620,13 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        // Mapeamento correto:
-                        // valor_cod -> Valor Total
-                        // recebido -> Pago
-                        // resta -> Resta
-                        const valorTotal = boleto.valor_total;  // valor_cod do banco
-                        const pago = boleto.pago;                // recebido do banco
-                        const resta = boleto.resta;              // resta do banco
+                        const valorTotal = boleto.valor_total;
+                        const pago = boleto.pago;
+                        const resta = boleto.resta;
                         
                         const dataVencimento = boleto.data_vencimento ? 
                             new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
                         
-                        // Pegar o tipo do banco
                         const tipo = limparCampo(boleto.tipo);
                         const tipoClass = getTipoClass(tipo);
                         
@@ -536,8 +636,12 @@
                             <td>${limparCampo(boleto.contato)}</td>
                             <td>${limparCampo(boleto.contato2)}</td>
                             <td class="valor-cell">${formatarMoeda(valorTotal)}</td>
-                            <td class="valor-cell">${formatarMoeda(pago)}</td>
-                            <td class="valor-cell">${formatarMoeda(resta)}</td>
+                            <td class="valor-cell ${valorValido(pago) && pago > 0 ? 'status-pago' : ''}">
+                                ${formatarMoeda(pago)}
+                            </td>
+                            <td class="valor-cell ${valorValido(resta) && resta > 0 ? 'status-pendente' : ''}">
+                                ${formatarMoeda(resta)}
+                            </td>
                             <td>${dataVencimento}</td>
                             <td>
                                 ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}
@@ -571,6 +675,7 @@
             document.getElementById('searchInput').value = '';
             document.getElementById('searchInput').focus();
             document.getElementById('resultInfo').classList.remove('show');
+            document.getElementById('statsContainer').style.display = 'none';
             
             const tbody = document.getElementById('corpoTabela');
             tbody.innerHTML = `
