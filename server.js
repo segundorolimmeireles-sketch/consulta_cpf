@@ -17,30 +17,91 @@ const pool = new Pool({
 // Servir arquivos estáticos
 app.use(express.static('public'));
 
-// Rota para buscar dados
-app.get('/api/boletos', async (req, res) => {
+// Rota para buscar dados por CPF, nome ou contato
+app.get('/api/buscar', async (req, res) => {
+  const { termo } = req.query;
+  
+  if (!termo || termo.trim() === '') {
+    return res.json({ 
+      success: false, 
+      message: 'Por favor, forneça um termo de busca',
+      dados: [] 
+    });
+  }
+  
   try {
+    const termoLimpo = termo.trim();
+    
     const result = await pool.query(`
       SELECT 
         cod, 
         cpf_pagador as cpf, 
-        nome_cliente as nome_completo, 
+        nome_cliente as nome_completo,
+        contato_cliente as contato,
+        contato_cliente2 as contato2,
         valor_cod as valor_total, 
         recebido as pago, 
         resta, 
-        dt_vencimento as data_vencimento 
+        dt_vencimento as data_vencimento,
+        endereco,
+        referencia,
+        obs,
+        dt_pagamento,
+        parcela,
+        ficha,
+        nome_emp,
+        uf,
+        cidade,
+        baixa
       FROM public.tb_boletos 
+      WHERE 
+        cpf_pagador ILIKE $1 
+        OR nome_cliente ILIKE $1 
+        OR contato_cliente ILIKE $1
+        OR contato_cliente2 ILIKE $1
       ORDER BY dt_vencimento DESC
-      LIMIT 100
-    `);
-    res.json(result.rows);
+      LIMIT 50
+    `, [`%${termoLimpo}%`]);
+    
+    console.log(`🔍 Busca realizada: "${termoLimpo}" - ${result.rows.length} resultados`);
+    
+    res.json({ 
+      success: true, 
+      termo: termoLimpo,
+      total: result.rows.length,
+      dados: result.rows 
+    });
+    
   } catch (err) {
     console.error('Erro na consulta:', err);
-    res.status(500).json({ error: 'Erro ao buscar dados' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro ao buscar dados no banco',
+      error: err.message 
+    });
+  }
+});
+
+// Rota de teste de conexão
+app.get('/api/teste-conexao', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ 
+      success: true, 
+      message: 'Conexão com Neon funcionando!',
+      timestamp: result.rows[0].now 
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro de conexão com Neon',
+      error: err.message 
+    });
   }
 });
 
 // Iniciar servidor
 app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+  console.log(`✅ Servidor rodando em http://localhost:${port}`);
+  console.log(`📡 Conectado ao Neon Database`);
 });

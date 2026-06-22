@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Boletos</title>
+    <title>Consulta de Boletos - Neon</title>
     <style>
         * {
             margin: 0;
@@ -12,284 +12,612 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+        }
+
+        .header {
             background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
         h1 {
             color: #333;
-            margin-bottom: 20px;
-            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .stats {
-            display: flex;
-            gap: 20px;
+        .subtitle {
+            color: #666;
+            font-size: 14px;
             margin-bottom: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        .stat-card {
+        .search-box {
             flex: 1;
-            min-width: 150px;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-search {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
         }
 
-        .stat-card.total {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .stat-card.pago {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        .btn-search:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .result-info {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .result-info.show {
+            display: flex;
+        }
+
+        .result-count {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .result-term {
+            color: #666;
+            font-size: 14px;
         }
 
         .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .table-wrapper {
             overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            min-width: 1000px;
         }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         th {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
+            padding: 15px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
-        tr:hover {
-            background-color: #f5f5f5;
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background-color: #f8f9ff;
+        }
+
+        .cpf-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .valor-cell {
+            text-align: right;
+            font-weight: 600;
         }
 
         .status-pago {
-            color: green;
-            font-weight: bold;
+            color: #00b894;
+            font-weight: 600;
         }
 
         .status-pendente {
-            color: red;
-            font-weight: bold;
+            color: #d63031;
+            font-weight: 600;
         }
 
-        .valor {
-            text-align: right;
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
-        .loading {
+        .badge-pago {
+            background: #00b89420;
+            color: #00b894;
+        }
+
+        .badge-pendente {
+            background: #d6303120;
+            color: #d63031;
+        }
+
+        .empty-state {
             text-align: center;
-            padding: 20px;
-            font-size: 18px;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
             color: #666;
         }
 
-        .error {
-            background: #ffe6e6;
-            color: #d63031;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-
         .neon-console {
-            background: #1a1a1a;
+            background: #0a0a0a;
             color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 15px;
             margin-top: 20px;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            max-height: 200px;
+            font-size: 13px;
+            max-height: 300px;
             overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .neon-console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #00ff0030;
         }
 
         .neon-console h3 {
             color: #00ff00;
-            margin-bottom: 10px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .refresh-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.online {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .console-line {
+            margin: 3px 0;
+            opacity: 0.9;
+        }
+
+        .console-time {
+            color: #666;
+            margin-right: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            border-left: 4px solid #d63031;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .suggestion-tag {
+            background: #f0f0f0;
+            padding: 5px 15px;
+            border-radius: 15px;
             cursor: pointer;
-            margin-bottom: 10px;
+            font-size: 13px;
+            transition: all 0.3s;
         }
 
-        .refresh-btn:hover {
-            background: #45a049;
+        .suggestion-tag:hover {
+            background: #667eea20;
+            color: #667eea;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Visualizador de Boletos</h1>
-        
-        <button class="refresh-btn" onclick="carregarDados()">🔄 Atualizar Dados</button>
-        
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <h3>Total de Boletos</h3>
-                <h2 id="totalBoletos">0</h2>
+        <!-- Cabeçalho -->
+        <div class="header">
+            <h1>
+                🔍 Consulta de Boletos
+                <span style="font-size: 14px; color: #666;">| Neon Database</span>
+            </h1>
+            <p class="subtitle">Pesquise por CPF, Nome do Cliente ou Contato</p>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Digite CPF, Nome ou Contato..."
+                        autocomplete="off"
+                        onkeypress="if(event.key === 'Enter') buscarDados()"
+                    >
+                    <span class="search-icon">🔍</span>
+                </div>
+                <button class="btn btn-search" onclick="buscarDados()" id="btnBuscar">
+                    Buscar
+                </button>
+                <button class="btn btn-clear" onclick="limparBusca()">
+                    ✕ Limpar
+                </button>
             </div>
-            <div class="stat-card total">
-                <h3>Valor Total</h3>
-                <h2 id="valorTotal">R$ 0,00</h2>
-            </div>
-            <div class="stat-card pago">
-                <h3>Total Pago</h3>
-                <h2 id="totalPago">R$ 0,00</h2>
+
+            <div class="suggestions">
+                <span style="color: #999; font-size: 13px;">Sugestões:</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('123')">Buscar por CPF</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('Maria')">Buscar por Nome</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('119')">Buscar por Contato</span>
             </div>
         </div>
 
-        <div id="loading" class="loading">Carregando dados do Neon...</div>
-        
+        <!-- Info dos resultados -->
+        <div class="result-info" id="resultInfo">
+            <span class="result-count" id="resultCount">0</span>
+            <span class="result-term" id="resultTerm"></span>
+            <span id="loadingSpinner" style="display: none;">
+                <div class="loading-spinner"></div>
+            </span>
+        </div>
+
+        <!-- Tabela de resultados -->
         <div class="table-container">
-            <table id="tabelaBoletos">
-                <thead>
-                    <tr>
-                        <th>CPF</th>
-                        <th>Nome Completo</th>
-                        <th>Valor Total</th>
-                        <th>Pago</th>
-                        <th>Resta</th>
-                        <th>Data Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody id="corpoTabela">
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CPF</th>
+                            <th>Nome Completo</th>
+                            <th>Contato</th>
+                            <th>Contato 2</th>
+                            <th>Valor Total</th>
+                            <th>Pago</th>
+                            <th>Resta</th>
+                            <th>Data Vencimento</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <span style="font-size: 60px;">🔍</span>
+                                    <h3>Digite um CPF, nome ou contato para buscar</h3>
+                                    <p style="color: #999;">Os resultados aparecerão aqui</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
+        <!-- Console do Neon -->
         <div class="neon-console" id="neonConsole">
-            <h3>📋 Neon Console</h3>
+            <div class="neon-console-header">
+                <h3>
+                    <span class="status-dot online"></span>
+                    Neon Console
+                </h3>
+                <span style="color: #666; font-size: 12px;">PostgreSQL</span>
+            </div>
             <div id="consoleLog"></div>
         </div>
     </div>
 
     <script>
-        function logConsole(message) {
+        let currentSearch = '';
+
+        function logConsole(message, type = 'info') {
             const consoleDiv = document.getElementById('consoleLog');
             const time = new Date().toLocaleTimeString();
-            consoleDiv.innerHTML += `[${time}] ${message}<br>`;
+            const colors = {
+                info: '#00ff00',
+                error: '#ff4444',
+                success: '#00ff00',
+                warning: '#ffaa00'
+            };
+            const color = colors[type] || '#00ff00';
+            consoleDiv.innerHTML += `<div class="console-line"><span class="console-time">[${time}]</span> <span style="color: ${color}">${message}</span></div>`;
             consoleDiv.scrollTop = consoleDiv.scrollHeight;
         }
 
-        async function carregarDados() {
-            const loading = document.getElementById('loading');
+        function pesquisaRapida(termo) {
+            document.getElementById('searchInput').value = termo;
+            buscarDados();
+        }
+
+        async function buscarDados() {
+            const termo = document.getElementById('searchInput').value.trim();
             const tbody = document.getElementById('corpoTabela');
+            const btnBuscar = document.getElementById('btnBuscar');
+            const spinner = document.getElementById('loadingSpinner');
+            const resultInfo = document.getElementById('resultInfo');
             
-            loading.style.display = 'block';
-            logConsole('🔄 Iniciando consulta ao banco Neon...');
+            if (!termo) {
+                logConsole('⚠️ Por favor, digite um termo para busca', 'warning');
+                return;
+            }
+
+            currentSearch = termo;
+            
+            // Mostrar loading
+            btnBuscar.disabled = true;
+            btnBuscar.textContent = 'Buscando...';
+            spinner.style.display = 'inline-block';
+            resultInfo.classList.add('show');
+            
+            logConsole(`🔍 Iniciando busca por: "${termo}"`, 'info');
             
             try {
-                const response = await fetch('/api/boletos');
+                const response = await fetch(`/api/buscar?termo=${encodeURIComponent(termo)}`);
+                const result = await response.json();
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                if (!result.success) {
+                    throw new Error(result.message);
                 }
                 
-                const dados = await response.json();
+                const dados = result.dados;
                 
-                logConsole('✅ Dados recebidos com sucesso!');
-                logConsole(`📊 Total de registros: ${dados.length}`);
+                logConsole(`✅ Busca concluída! ${dados.length} registro(s) encontrado(s)`, 'success');
                 
-                // Atualizar estatísticas
-                atualizarStats(dados);
+                // Atualizar info
+                document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
+                document.getElementById('resultTerm').textContent = `para: "${termo}"`;
                 
                 // Limpar tabela
                 tbody.innerHTML = '';
                 
-                // Preencher tabela
-                dados.forEach(boleto => {
-                    const tr = document.createElement('tr');
-                    
-                    const valorTotal = parseFloat(boleto.valor_total || 0);
-                    const pago = parseFloat(boleto.pago || 0);
-                    const resta = parseFloat(boleto.resta || 0);
-                    
-                    tr.innerHTML = `
-                        <td>${boleto.cpf || 'N/A'}</td>
-                        <td>${boleto.nome_completo || 'N/A'}</td>
-                        <td class="valor">R$ ${valorTotal.toFixed(2)}</td>
-                        <td class="valor ${pago > 0 ? 'status-pago' : 'status-pendente'}">
-                            R$ ${pago.toFixed(2)}
-                        </td>
-                        <td class="valor ${resta > 0 ? 'status-pendente' : 'status-pago'}">
-                            R$ ${resta.toFixed(2)}
-                        </td>
-                        <td>${boleto.data_vencimento ? new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                if (dados.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <span style="font-size: 60px;">😕</span>
+                                    <h3>Nenhum resultado encontrado</h3>
+                                    <p style="color: #999;">Tente buscar com outro termo</p>
+                                </div>
+                            </td>
+                        </tr>
                     `;
-                    
-                    tbody.appendChild(tr);
-                });
-                
-                logConsole('✨ Tabela atualizada com sucesso!');
+                    logConsole('📭 Nenhum registro encontrado', 'warning');
+                } else {
+                    // Preencher tabela
+                    dados.forEach(boleto => {
+                        const tr = document.createElement('tr');
+                        
+                        const valorTotal = parseFloat(boleto.valor_total || 0);
+                        const pago = parseFloat(boleto.pago || 0);
+                        const resta = parseFloat(boleto.resta || 0);
+                        const dataVencimento = boleto.data_vencimento ? 
+                            new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : 'N/A';
+                        
+                        const status = resta <= 0 ? 'Pago' : 'Pendente';
+                        const badgeClass = resta <= 0 ? 'badge-pago' : 'badge-pendente';
+                        
+                        tr.innerHTML = `
+                            <td class="cpf-cell">${boleto.cpf || 'N/A'}</td>
+                            <td><strong>${boleto.nome_completo || 'N/A'}</strong></td>
+                            <td>${boleto.contato || 'N/A'}</td>
+                            <td>${boleto.contato2 || 'N/A'}</td>
+                            <td class="valor-cell">R$ ${valorTotal.toFixed(2)}</td>
+                            <td class="valor-cell ${pago > 0 ? 'status-pago' : 'status-pendente'}">
+                                R$ ${pago.toFixed(2)}
+                            </td>
+                            <td class="valor-cell ${resta > 0 ? 'status-pendente' : 'status-pago'}">
+                                R$ ${resta.toFixed(2)}
+                            </td>
+                            <td>${dataVencimento}</td>
+                            <td><span class="status-badge ${badgeClass}">${status}</span></td>
+                        `;
+                        
+                        tbody.appendChild(tr);
+                    });
+                }
                 
             } catch (error) {
                 console.error('Erro:', error);
-                logConsole(`❌ Erro: ${error.message}`);
+                logConsole(`❌ Erro: ${error.message}`, 'error');
                 
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="error">
-                            Erro ao carregar dados: ${error.message}
+                        <td colspan="9">
+                            <div class="error-message">
+                                <strong>Erro ao buscar dados:</strong> ${error.message}
+                            </div>
                         </td>
                     </tr>
                 `;
             } finally {
-                loading.style.display = 'none';
+                btnBuscar.disabled = false;
+                btnBuscar.textContent = 'Buscar';
+                spinner.style.display = 'none';
             }
         }
 
-        function atualizarStats(dados) {
-            const totalBoletos = dados.length;
-            let valorTotal = 0;
-            let totalPago = 0;
+        function limparBusca() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').focus();
+            document.getElementById('resultInfo').classList.remove('show');
             
-            dados.forEach(boleto => {
-                valorTotal += parseFloat(boleto.valor_total || 0);
-                totalPago += parseFloat(boleto.pago || 0);
-            });
+            const tbody = document.getElementById('corpoTabela');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <span style="font-size: 60px;">🔍</span>
+                            <h3>Digite um CPF, nome ou contato para buscar</h3>
+                            <p style="color: #999;">Os resultados aparecerão aqui</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
             
-            document.getElementById('totalBoletos').textContent = totalBoletos;
-            document.getElementById('valorTotal').textContent = `R$ ${valorTotal.toFixed(2)}`;
-            document.getElementById('totalPago').textContent = `R$ ${totalPago.toFixed(2)}`;
+            logConsole('🔄 Busca limpa', 'info');
         }
 
-        // Carregar dados ao iniciar
-        logConsole('🚀 Sistema iniciado');
-        logConsole('📡 Conectando ao Neon Database...');
-        carregarDados();
-        
-        // Atualizar a cada 30 segundos
-        setInterval(carregarDados, 30000);
+        // Testar conexão ao carregar
+        async function testarConexao() {
+            logConsole('🚀 Sistema iniciado', 'info');
+            logConsole('📡 Testando conexão com Neon...', 'info');
+            
+            try {
+                const response = await fetch('/api/teste-conexao');
+                const result = await response.json();
+                
+                if (result.success) {
+                    logConsole('✅ Conexão com Neon estabelecida!', 'success');
+                    logConsole(`⏰ Timestamp do servidor: ${result.timestamp}`, 'info');
+                }
+            } catch (error) {
+                logConsole('❌ Erro de conexão com o servidor', 'error');
+            }
+        }
+
+        // Foco no input ao carregar
+        window.onload = () => {
+            document.getElementById('searchInput').focus();
+            testarConexao();
+        };
     </script>
 </body>
 </html>
