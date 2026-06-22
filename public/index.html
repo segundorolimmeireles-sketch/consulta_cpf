@@ -491,8 +491,6 @@
                 
                 const dados = result.dados;
                 
-                console.log('Dados recebidos:', dados); // Debug
-                
                 // Atualizar info
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
                 document.getElementById('resultTerm').textContent = `para: "${termo}"`;
@@ -517,12 +515,13 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        // Pegar os valores diretamente (nomes corrigidos no SQL)
-                        const valorTotal = boleto.valor_total;
-                        const pago = boleto.pago;
-                        const resta = boleto.resta;
-                        
-                        console.log('Valores:', { valorTotal, pago, resta }); // Debug
+                        // Mapeamento correto:
+                        // valor_cod -> Valor Total
+                        // recebido -> Pago
+                        // resta -> Resta
+                        const valorTotal = boleto.valor_total;  // valor_cod do banco
+                        const pago = boleto.pago;                // recebido do banco
+                        const resta = boleto.resta;              // resta do banco
                         
                         const dataVencimento = boleto.data_vencimento ? 
                             new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
