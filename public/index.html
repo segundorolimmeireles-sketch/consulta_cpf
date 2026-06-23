@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Boletos</title>
+    <title>Consulta de Boletos Empresarial Orley e Orlando</title>
     <style>
         * {
             margin: 0;
@@ -370,16 +370,16 @@
         <div class="header">
             <h1>
                 🔍 Consulta de Boletos
-                <span style="font-size: 14px; color: #666;">| Neon Database</span>
+                <span style="font-size: 14px; color: #666;">Empresarial Orley e Orlando</span>
             </h1>
-            <p class="subtitle">Pesquise por CPF (parcial), Nome Exato ou Contato</p>
+            <p class="subtitle">Pesquise por CPF, Nome completo ou Contato</p>
             
             <div class="search-container">
                 <div class="search-box">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Digite CPF, Nome Completo ou Contato..."
+                        placeholder="Digite CPF, Nome completo ou Contato..."
                         autocomplete="off"
                         onkeypress="if(event.key === 'Enter') buscarDados()"
                     >
@@ -448,6 +448,8 @@
                             <th>Pago</th>
                             <th>Resta</th>
                             <th>Data Vencimento</th>
+                            <th>Equipe</th>
+                            <th>Vendedor</th>
                             <th>Tipo (Status)</th>
                         </tr>
                     </thead>
@@ -633,8 +635,6 @@
                         tr.innerHTML = `
                             <td class="cpf-cell" title="${limparCampo(boleto.cpf)}">${formatarCPFOculto(boleto.cpf)}</td>
                             <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
-                            <td>${limparCampo(boleto.contato)}</td>
-                            <td>${limparCampo(boleto.contato2)}</td>
                             <td class="valor-cell">${formatarMoeda(valorTotal)}</td>
                             <td class="valor-cell ${valorValido(pago) && pago > 0 ? 'status-pago' : ''}">
                                 ${formatarMoeda(pago)}
@@ -643,6 +643,8 @@
                                 ${formatarMoeda(resta)}
                             </td>
                             <td>${dataVencimento}</td>
+                            <td>${limparCampo(boleto.nome_eq)}</td>
+                            <td>${limparCampo(boleto.nome_vendedor)}</td>
                             <td>
                                 ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}
                             </td>
