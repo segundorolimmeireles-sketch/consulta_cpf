@@ -21,17 +21,10 @@ app.use(express.static('public'));
 function converterValor(valor) {
   if (!valor || valor === 'null' || valor === 'NaN') return null;
   
-  // Se já for número, retorna ele
   if (typeof valor === 'number') return valor;
   
-  // Converte para string e limpa
   let valorStr = String(valor).trim();
-  
-  // Remove o símbolo de moeda (R$ ou $)
   valorStr = valorStr.replace(/[R$\s]/g, '');
-  
-  // Remove vírgulas (separador de milhar) e converte para número
-  // Ex: "1,500.00" -> "1500.00"
   valorStr = valorStr.replace(/,/g, '');
   
   const numero = parseFloat(valorStr);
@@ -58,8 +51,8 @@ app.get('/api/buscar', async (req, res) => {
         cod, 
         cpf_pagador as cpf, 
         nome_cliente as nome_completo,
-        contato_cliente as contato,
-        contato_cliente2 as contato2,
+        nome_eq as equipe,
+        nome_vendedor as vendedor,
         valor_cod as valor_total, 
         recebido as pago, 
         resta, 
@@ -95,14 +88,6 @@ app.get('/api/buscar', async (req, res) => {
     
     console.log(`🔍 Busca: "${termoLimpo}" - ${dadosConvertidos.length} resultados`);
     
-    // Mostrar primeira conversão como exemplo
-    if (dadosConvertidos.length > 0) {
-      console.log('Exemplo conversão:', {
-        original: result.rows[0].valor_total,
-        convertido: dadosConvertidos[0].valor_total
-      });
-    }
-    
     res.json({ 
       success: true, 
       termo: termoLimpo,
@@ -120,7 +105,7 @@ app.get('/api/buscar', async (req, res) => {
   }
 });
 
-// Rota de teste de conexão e conversão
+// Rota de teste de conversão
 app.get('/api/teste-conversao', async (req, res) => {
   try {
     const result = await pool.query('SELECT valor_cod, recebido, resta FROM public.tb_boletos LIMIT 5');

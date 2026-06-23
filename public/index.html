@@ -442,8 +442,8 @@
                         <tr>
                             <th>CPF</th>
                             <th>Nome Completo</th>
-                            <th>Contato</th>
-                            <th>Contato 2</th>
+                            <th>Equipe</th>
+                            <th>Vendedor</th>
                             <th>Valor Total</th>
                             <th>Pago</th>
                             <th>Resta</th>
@@ -478,7 +478,6 @@
             const numero = parseFloat(valor);
             if (isNaN(numero)) return '';
             
-            // Formata no padrão brasileiro: R$ 1.500,00
             return 'R$ ' + numero.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -614,8 +613,8 @@
                         tr.innerHTML = `
                             <td class="cpf-cell" title="${limparCampo(boleto.cpf)}">${formatarCPFOculto(boleto.cpf)}</td>
                             <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
-                            <td>${limparCampo(boleto.contato)}</td>
-                            <td>${limparCampo(boleto.contato2)}</td>
+                            <td>${limparCampo(boleto.equipe)}</td>
+                            <td>${limparCampo(boleto.vendedor)}</td>
                             <td class="valor-cell">${formatarMoeda(boleto.valor_total)}</td>
                             <td class="valor-cell ${valorValido(boleto.pago) && boleto.pago > 0 ? 'status-pago' : ''}">${formatarMoeda(boleto.pago)}</td>
                             <td class="valor-cell ${valorValido(boleto.resta) && boleto.resta > 0 ? 'status-pendente' : ''}">${formatarMoeda(boleto.resta)}</td>
