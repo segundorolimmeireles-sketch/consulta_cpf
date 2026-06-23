@@ -622,8 +622,8 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        const valorTotal = boleto.valor_total;
-                        const pago = boleto.pago;
+                        const valorTotal = boleto.valor_cod;
+                        const pago = boleto.recebido;
                         const resta = boleto.resta;
                         
                         const dataVencimento = boleto.data_vencimento ? 
@@ -648,6 +648,8 @@
                             <td>
                                 ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}
                             </td>
+                            <td>${limparCampo(boleto.nome_eq)}</td>
+                            <td>${limparCampo(boleto.nome_vendedor)}</td>
                         `;
                         
                         tbody.appendChild(tr);
