@@ -369,10 +369,10 @@
         <!-- Cabeçalho -->
         <div class="header">
             <h1>
-                🔍 Consulta de Boletos
-                <span style="font-size: 14px; color: #666;">| Neon Database</span>
+                🔍 Consulta de Boletos Empresarial Orley e Orlando
+                <span style="font-size: 14px; color: #666;"></span>
             </h1>
-            <p class="subtitle">Pesquise por CPF (parcial), Nome Exato ou Contato</p>
+            <p class="subtitle">Pesquise por CPF, Nome completo ou Contato</p>
             
             <div class="search-container">
                 <div class="search-box">
@@ -401,7 +401,7 @@
                 <span style="color: #999; font-size: 13px;">💡 Exemplos:</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('123.456.789-00')">Buscar por CPF</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('João Silva')">Buscar por Nome Exato</span>
-                <span class="suggestion-tag" onclick="pesquisaRapida('(11) 99999')">Buscar por Contato</span>
+                <span class="suggestion-tag" onclick="pesquisaRapida('(11)9999-9999')">Buscar por Contato</span>
             </div>
         </div>
 
@@ -467,7 +467,7 @@
         </div>
 
         <div class="footer-info">
-            Conectado ao Neon Database • Dados em tempo real
+            Dev - Segundo Rolim Meireles • Dados em tempo real
         </div>
     </div>
 
@@ -545,8 +545,8 @@
             let totalResta = 0;
             
             dados.forEach(item => {
-                const vt = parseFloat(item.valor_total) || 0;
-                const pg = parseFloat(item.pago) || 0;
+                const vt = parseFloat(item.valor_cod) || 0;
+                const pg = parseFloat(item.recebido) || 0;
                 const rt = parseFloat(item.resta) || 0;
                 
                 valorTotal += vt;
