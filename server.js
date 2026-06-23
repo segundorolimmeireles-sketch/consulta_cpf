@@ -39,6 +39,8 @@ app.get('/api/buscar', async (req, res) => {
         nome_cliente as nome_completo,
         contato_cliente as contato,
         contato_cliente2 as contato2,
+        nome_eq,
+        nome_vendedor,
         valor_cod, 
         recebido, 
         resta, 
