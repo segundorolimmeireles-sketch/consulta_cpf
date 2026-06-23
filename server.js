@@ -39,10 +39,17 @@ app.get('/api/buscar', async (req, res) => {
         nome_cliente as nome_completo,
         contato_cliente as contato,
         contato_cliente2 as contato2,
+        nome_eq,
+        nome_vendedor,
+<<<<<<< HEAD
         valor_cod as valor_total, 
         recebido as pago, 
+=======
+        valor_cod, 
+        recebido, 
+>>>>>>> 58893f76f1939628c30bbb0fe24095d053f5facc
         resta, 
-        dt_vencimento as data_vencimento,
+        dt_vencimento,
         tipo,
         endereco,
         referencia,
