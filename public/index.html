@@ -379,7 +379,7 @@
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Digite CPF, Nome completo ou Contato..."
+                        placeholder="Digite CPF, Nome Completo ou Contato..."
                         autocomplete="off"
                         onkeypress="if(event.key === 'Enter') buscarDados()"
                     >
@@ -442,12 +442,12 @@
                         <tr>
                             <th>CPF</th>
                             <th>Nome Completo</th>
+                            <th>Contato</th>
+                            <th>Contato 2</th>
                             <th>Valor Total</th>
                             <th>Pago</th>
                             <th>Resta</th>
                             <th>Data Vencimento</th>
-                            <th>Equipe</th>
-                            <th>Vendedor</th>
                             <th>Tipo (Status)</th>
                         </tr>
                     </thead>
@@ -467,7 +467,7 @@
         </div>
 
         <div class="footer-info">
-            Dev - Segundo Rolim Meireles • Dados em tempo real
+            Conectado ao Neon Database • Dados em tempo real
         </div>
     </div>
 
@@ -545,8 +545,8 @@
             let totalResta = 0;
             
             dados.forEach(item => {
-                const vt = parseFloat(item.valor_cod) || 0;
-                const pg = parseFloat(item.recebido) || 0;
+                const vt = parseFloat(item.valor_total) || 0;
+                const pg = parseFloat(item.pago) || 0;
                 const rt = parseFloat(item.resta) || 0;
                 
                 valorTotal += vt;
@@ -620,8 +620,8 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
-                        const valorTotal = boleto.valor_cod;
-                        const pago = boleto.recebido;
+                        const valorTotal = boleto.valor_total;
+                        const pago = boleto.pago;
                         const resta = boleto.resta;
                         
                         const dataVencimento = boleto.data_vencimento ? 
@@ -633,6 +633,8 @@
                         tr.innerHTML = `
                             <td class="cpf-cell" title="${limparCampo(boleto.cpf)}">${formatarCPFOculto(boleto.cpf)}</td>
                             <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
+                            <td>${limparCampo(boleto.contato)}</td>
+                            <td>${limparCampo(boleto.contato2)}</td>
                             <td class="valor-cell">${formatarMoeda(valorTotal)}</td>
                             <td class="valor-cell ${valorValido(pago) && pago > 0 ? 'status-pago' : ''}">
                                 ${formatarMoeda(pago)}
@@ -641,13 +643,9 @@
                                 ${formatarMoeda(resta)}
                             </td>
                             <td>${dataVencimento}</td>
-                            <td>${limparCampo(boleto.nome_eq)}</td>
-                            <td>${limparCampo(boleto.nome_vendedor)}</td>
                             <td>
                                 ${tipo ? `<span class="tipo-badge ${tipoClass}">${tipo}</span>` : ''}
                             </td>
-                            <td>${limparCampo(boleto.nome_eq)}</td>
-                            <td>${limparCampo(boleto.nome_vendedor)}</td>
                         `;
                         
                         tbody.appendChild(tr);
