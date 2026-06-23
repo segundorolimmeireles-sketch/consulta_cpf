@@ -17,21 +17,24 @@ const pool = new Pool({
 // Servir arquivos estáticos
 app.use(express.static('public'));
 
-// Função para converter valor do formato '$150,00' para número
+// Função para converter valor do formato '$1,500.00' ou '$150.00' para número
 function converterValor(valor) {
   if (!valor || valor === 'null' || valor === 'NaN') return null;
   
   // Se já for número, retorna ele
   if (typeof valor === 'number') return valor;
   
-  // Converte string: remove $, substitui , por . e converte para número
-  const valorLimpo = String(valor)
-    .replace('$', '')
-    .replace(/\./g, '')
-    .replace(',', '.')
-    .trim();
+  // Converte para string e limpa
+  let valorStr = String(valor).trim();
   
-  const numero = parseFloat(valorLimpo);
+  // Remove o símbolo de moeda (R$ ou $)
+  valorStr = valorStr.replace(/[R$\s]/g, '');
+  
+  // Remove vírgulas (separador de milhar) e converte para número
+  // Ex: "1,500.00" -> "1500.00"
+  valorStr = valorStr.replace(/,/g, '');
+  
+  const numero = parseFloat(valorStr);
   return isNaN(numero) ? null : numero;
 }
 
@@ -90,7 +93,15 @@ app.get('/api/buscar', async (req, res) => {
       resta: converterValor(row.resta)
     }));
     
-    console.log(`🔍 Busca realizada: "${termoLimpo}" - ${dadosConvertidos.length} resultados`);
+    console.log(`🔍 Busca: "${termoLimpo}" - ${dadosConvertidos.length} resultados`);
+    
+    // Mostrar primeira conversão como exemplo
+    if (dadosConvertidos.length > 0) {
+      console.log('Exemplo conversão:', {
+        original: result.rows[0].valor_total,
+        convertido: dadosConvertidos[0].valor_total
+      });
+    }
     
     res.json({ 
       success: true, 
@@ -109,35 +120,30 @@ app.get('/api/buscar', async (req, res) => {
   }
 });
 
-// Rota de teste de conexão
-app.get('/api/teste-conexao', async (req, res) => {
+// Rota de teste de conexão e conversão
+app.get('/api/teste-conversao', async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()');
-    const resultValores = await pool.query('SELECT valor_cod, recebido, resta FROM public.tb_boletos LIMIT 1');
+    const result = await pool.query('SELECT valor_cod, recebido, resta FROM public.tb_boletos LIMIT 5');
     
-    console.log('Valores originais do banco:', resultValores.rows[0]);
-    
-    const convertido = {
-      valor_total: converterValor(resultValores.rows[0].valor_cod),
-      pago: converterValor(resultValores.rows[0].recebido),
-      resta: converterValor(resultValores.rows[0].resta)
-    };
-    
-    console.log('Valores convertidos:', convertido);
+    const exemplos = result.rows.map(row => ({
+      original: {
+        valor_cod: row.valor_cod,
+        recebido: row.recebido,
+        resta: row.resta
+      },
+      convertido: {
+        valor_cod: converterValor(row.valor_cod),
+        recebido: converterValor(row.recebido),
+        resta: converterValor(row.resta)
+      }
+    }));
     
     res.json({ 
-      success: true, 
-      message: 'Conexão com Neon funcionando!',
-      timestamp: result.rows[0].now,
-      valores_originais: resultValores.rows[0],
-      valores_convertidos: convertido
+      success: true,
+      exemplos: exemplos
     });
   } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Erro de conexão com Neon',
-      error: err.message 
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
