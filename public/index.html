@@ -472,7 +472,8 @@
     </div>
 
     <script>
-        // Função para formatar valor monetário, retorna vazio se for NaN
+        // Função para formatar valor monetário
+        // Agora os valores já vêm como número do servidor
         function formatarMoeda(valor) {
             if (valor === null || valor === undefined || valor === '') return '';
             const numero = parseFloat(valor);
@@ -545,6 +546,7 @@
             let totalResta = 0;
             
             dados.forEach(item => {
+                // Os valores já vêm convertidos do servidor
                 const vt = parseFloat(item.valor_total) || 0;
                 const pg = parseFloat(item.pago) || 0;
                 const rt = parseFloat(item.resta) || 0;
@@ -593,6 +595,8 @@
                 
                 const dados = result.dados;
                 
+                console.log('Dados recebidos:', dados); // Debug
+                
                 // Atualizar info
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
                 document.getElementById('resultTerm').textContent = `para: "${termo}"`;
@@ -620,6 +624,7 @@
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         
+                        // Valores já convertidos para número
                         const valorTotal = boleto.valor_total;
                         const pago = boleto.pago;
                         const resta = boleto.resta;
