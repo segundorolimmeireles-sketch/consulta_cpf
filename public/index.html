@@ -118,6 +118,56 @@
             background: #e0e0e0;
         }
 
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-whatsapp:hover {
+            background: #128C7E;
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp-small {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-whatsapp-small:hover {
+            background: #128C7E;
+            transform: scale(1.05);
+        }
+
+        .equipe-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .result-info {
             background: white;
             border-radius: 10px;
@@ -362,6 +412,71 @@
         .stat-card.pago { border-left: 4px solid #00b894; }
         .stat-card.resta { border-left: 4px solid #d63031; }
         .stat-card.quantidade { border-left: 4px solid #f39c12; }
+
+        .whatsapp-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .whatsapp-modal.show {
+            display: flex;
+        }
+
+        .whatsapp-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .whatsapp-modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .equipe-contato {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .equipe-contato:last-child {
+            border-bottom: none;
+        }
+
+        .equipe-nome {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .equipe-telefone {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -370,7 +485,7 @@
         <div class="header">
             <h1>
                 🔍 Consulta de Boletos
-                <span style="font-size: 14px; color: #666;">| Empresarial Orley e Orlando</span>
+                <span style="font-size: 14px; color: #666;">| Neon Database</span>
             </h1>
             <p class="subtitle">Pesquise por CPF (parcial), Nome Exato ou Contato</p>
             
@@ -391,6 +506,9 @@
                 <button class="btn btn-clear" onclick="limparBusca()">
                     ✕ Limpar
                 </button>
+                <button class="btn-whatsapp" onclick="abrirModalEquipes()">
+                    📱 WhatsApp Equipes
+                </button>
             </div>
 
             <p class="search-type-info">
@@ -402,6 +520,15 @@
                 <span class="suggestion-tag" onclick="pesquisaRapida('123.456.789-00')">Buscar por CPF</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('João Silva')">Buscar por Nome Exato</span>
                 <span class="suggestion-tag" onclick="pesquisaRapida('(11) 99999')">Buscar por Contato</span>
+            </div>
+        </div>
+
+        <!-- Modal de Equipes -->
+        <div class="whatsapp-modal" id="whatsappModal">
+            <div class="whatsapp-modal-content">
+                <span class="modal-close" onclick="fecharModalEquipes()">&times;</span>
+                <h3>📱 Contatos das Equipes</h3>
+                <div id="listaEquipes"></div>
             </div>
         </div>
 
@@ -444,6 +571,7 @@
                             <th>Nome Completo</th>
                             <th>Equipe</th>
                             <th>Vendedor</th>
+                            <th>WhatsApp</th>
                             <th>Valor Total</th>
                             <th>Pago</th>
                             <th>Resta</th>
@@ -453,7 +581,7 @@
                     </thead>
                     <tbody id="corpoTabela">
                         <tr>
-                            <td colspan="9">
+                            <td colspan="10">
                                 <div class="empty-state">
                                     <span class="icon">🔍</span>
                                     <h3>Digite um CPF, nome ou contato para buscar</h3>
@@ -467,97 +595,143 @@
         </div>
 
         <div class="footer-info">
-            Dev - Segundo Rolim Meireles • Dados em tempo real exclusivo para clientes
+            Conectado ao Neon Database • Dados em tempo real
         </div>
     </div>
 
     <script>
-        // Função para formatar valor monetário no padrão brasileiro (R$ 1.500,00)
+        // MAPEAMENTO DAS EQUIPES E SEUS CONTATOS DE WHATSAPP
+        // Adicione aqui todas as 15 equipes com seus respectivos números
+        const equipesWhatsApp = {
+            'Equipe Alpha': { telefone: '5511999999999', nome: 'João' },
+            'Equipe Beta': { telefone: '5511999999998', nome: 'Maria' },
+            'Equipe Gamma': { telefone: '5511999999997', nome: 'Pedro' },
+            'Equipe Delta': { telefone: '5511999999996', nome: 'Ana' },
+            'Equipe Epsilon': { telefone: '5511999999995', nome: 'Carlos' },
+            'Equipe Zeta': { telefone: '5511999999994', nome: 'Julia' },
+            'Equipe Eta': { telefone: '5511999999993', nome: 'Lucas' },
+            'Equipe Theta': { telefone: '5511999999992', nome: 'Mariana' },
+            'Equipe Iota': { telefone: '5511999999991', nome: 'Rafael' },
+            'Equipe Kappa': { telefone: '5511999999990', nome: 'Fernanda' },
+            'Equipe Lambda': { telefone: '5511999999989', nome: 'Bruno' },
+            'Equipe Mu': { telefone: '5511999999988', nome: 'Amanda' },
+            'Equipe Nu': { telefone: '5511999999987', nome: 'Diego' },
+            'Equipe Xi': { telefone: '5511999999986', nome: 'Patricia' },
+            'Equipe Omicron': { telefone: '5511999999985', nome: 'Gustavo' }
+        };
+
+        // Função para criar link do WhatsApp
+        function criarLinkWhatsApp(equipeNome, mensagem) {
+            const equipe = equipesWhatsApp[equipeNome];
+            
+            if (!equipe) {
+                // Se a equipe não estiver mapeada, retorna link padrão
+                return `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem || 'Olá!')}`;
+            }
+            
+            const texto = mensagem || 'Olá! Preciso de informações sobre o boleto.';
+            return `https://wa.me/${equipe.telefone}?text=${encodeURIComponent(texto)}`;
+        }
+
+        // Função para abrir WhatsApp com mensagem personalizada
+        function abrirWhatsApp(equipeNome, nomeCliente, valorTotal, dataVencimento) {
+            const mensagem = `Olá! Me chamo ${nomeCliente}, gostaria de informações sobre meu boleto no valor de ${valorTotal} com vencimento em ${dataVencimento}.`;
+            const link = criarLinkWhatsApp(equipeNome, mensagem);
+            window.open(link, '_blank');
+        }
+
+        // Função para abrir modal com todas as equipes
+        function abrirModalEquipes() {
+            const modal = document.getElementById('whatsappModal');
+            const lista = document.getElementById('listaEquipes');
+            
+            let html = '';
+            for (const [equipe, dados] of Object.entries(equipesWhatsApp)) {
+                const telefoneFormatado = dados.telefone.replace(/^55(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+                html += `
+                    <div class="equipe-contato">
+                        <div>
+                            <div class="equipe-nome">${equipe}</div>
+                            <div class="equipe-telefone">${dados.nome} - ${telefoneFormatado}</div>
+                        </div>
+                        <a href="https://wa.me/${dados.telefone}" target="_blank" class="btn-whatsapp-small">
+                            📱 WhatsApp
+                        </a>
+                    </div>
+                `;
+            }
+            
+            lista.innerHTML = html;
+            modal.classList.add('show');
+        }
+
+        // Função para fechar modal
+        function fecharModalEquipes() {
+            document.getElementById('whatsappModal').classList.remove('show');
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('whatsappModal');
+            if (event.target === modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        // Função para formatar valor monetário
         function formatarMoeda(valor) {
             if (valor === null || valor === undefined || valor === '') return '';
             const numero = parseFloat(valor);
             if (isNaN(numero)) return '';
-            
             return 'R$ ' + numero.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
         }
 
-        // Função para verificar se valor é válido
         function valorValido(valor) {
             if (valor === null || valor === undefined || valor === '') return false;
             const numero = parseFloat(valor);
             return !isNaN(numero);
         }
 
-        // Função para ocultar parte do CPF
         function formatarCPFOculto(cpf) {
             if (!cpf || cpf === 'null' || cpf === 'NaN' || cpf === 'undefined') return '';
-            
             const numeros = cpf.replace(/\D/g, '');
-            
             if (numeros.length === 11) {
                 return numeros.substring(0, 3) + '.***.***-' + numeros.substring(9, 11);
-            } else if (numeros.length > 4) {
-                const inicio = numeros.substring(0, 3);
-                const fim = numeros.substring(numeros.length - 2);
-                const meio = '*'.repeat(numeros.length - 5);
-                return inicio + '.' + meio + '.' + fim;
             }
-            
             return cpf;
         }
 
-        // Função para limpar campos vazios/inválidos
         function limparCampo(valor) {
             if (!valor || valor === 'null' || valor === 'NaN' || valor === 'undefined' || valor === 'nan') return '';
             return valor;
         }
 
-        // Função para determinar a classe CSS baseada no tipo
         function getTipoClass(tipo) {
             if (!tipo) return 'tipo-default';
-            
             const tipoLower = tipo.toLowerCase().trim();
-            
-            if (tipoLower.includes('pago') || tipoLower.includes('quitado') || tipoLower.includes('liquidado')) {
-                return 'tipo-pago';
-            } else if (tipoLower.includes('pendente') || tipoLower.includes('aberto') || tipoLower.includes('aguardando')) {
-                return 'tipo-pendente';
-            } else if (tipoLower.includes('vencido') || tipoLower.includes('atrasado')) {
-                return 'tipo-vencido';
-            } else if (tipoLower.includes('cancelado') || tipoLower.includes('baixado')) {
-                return 'tipo-cancelado';
-            } else {
-                return 'tipo-default';
-            }
+            if (tipoLower.includes('pago') || tipoLower.includes('quitado') || tipoLower.includes('liquidado')) return 'tipo-pago';
+            if (tipoLower.includes('pendente') || tipoLower.includes('aberto') || tipoLower.includes('aguardando')) return 'tipo-pendente';
+            if (tipoLower.includes('vencido') || tipoLower.includes('atrasado')) return 'tipo-vencido';
+            if (tipoLower.includes('cancelado') || tipoLower.includes('baixado')) return 'tipo-cancelado';
+            return 'tipo-default';
         }
 
         function atualizarEstatisticas(dados) {
             const statsContainer = document.getElementById('statsContainer');
-            
             if (dados.length === 0) {
                 statsContainer.style.display = 'none';
                 return;
             }
-            
             statsContainer.style.display = 'grid';
-            
-            let valorTotal = 0;
-            let totalPago = 0;
-            let totalResta = 0;
-            
+            let valorTotal = 0, totalPago = 0, totalResta = 0;
             dados.forEach(item => {
-                const vt = parseFloat(item.valor_total) || 0;
-                const pg = parseFloat(item.pago) || 0;
-                const rt = parseFloat(item.resta) || 0;
-                
-                valorTotal += vt;
-                totalPago += pg;
-                totalResta += rt;
+                valorTotal += parseFloat(item.valor_total) || 0;
+                totalPago += parseFloat(item.pago) || 0;
+                totalResta += parseFloat(item.resta) || 0;
             });
-            
             document.getElementById('statQuantidade').textContent = dados.length;
             document.getElementById('statValorTotal').textContent = formatarMoeda(valorTotal);
             document.getElementById('statPago').textContent = formatarMoeda(totalPago);
@@ -589,33 +763,38 @@
             try {
                 const response = await fetch(`/api/buscar?termo=${encodeURIComponent(termo)}`);
                 const result = await response.json();
-                
                 if (!result.success) throw new Error(result.message);
                 
                 const dados = result.dados;
-                
                 document.getElementById('resultCount').textContent = `${dados.length} encontrado(s)`;
                 document.getElementById('resultTerm').textContent = `para: "${termo}"`;
-                
                 atualizarEstatisticas(dados);
                 
                 tbody.innerHTML = '';
                 
                 if (dados.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><span class="icon">😕</span><h3>Nenhum resultado encontrado</h3><p>Tente buscar com outro termo</p></div></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><span class="icon">😕</span><h3>Nenhum resultado encontrado</h3><p>Tente buscar com outro termo</p></div></td></tr>`;
                 } else {
                     dados.forEach(boleto => {
                         const tr = document.createElement('tr');
                         const dataVencimento = boleto.data_vencimento ? new Date(boleto.data_vencimento).toLocaleDateString('pt-BR') : '';
                         const tipo = limparCampo(boleto.tipo);
                         const tipoClass = getTipoClass(tipo);
+                        const nomeCliente = limparCampo(boleto.nome_completo);
+                        const valorTotalFormatado = formatarMoeda(boleto.valor_total);
+                        const equipe = limparCampo(boleto.equipe);
                         
                         tr.innerHTML = `
                             <td class="cpf-cell" title="${limparCampo(boleto.cpf)}">${formatarCPFOculto(boleto.cpf)}</td>
-                            <td><strong>${limparCampo(boleto.nome_completo)}</strong></td>
-                            <td>${limparCampo(boleto.equipe)}</td>
+                            <td><strong>${nomeCliente}</strong></td>
+                            <td>${equipe}</td>
                             <td>${limparCampo(boleto.vendedor)}</td>
-                            <td class="valor-cell">${formatarMoeda(boleto.valor_total)}</td>
+                            <td>
+                                <button class="btn-whatsapp-small" onclick="abrirWhatsApp('${equipe}', '${nomeCliente}', '${valorTotalFormatado}', '${dataVencimento}')">
+                                    📱 WhatsApp
+                                </button>
+                            </td>
+                            <td class="valor-cell">${valorTotalFormatado}</td>
                             <td class="valor-cell ${valorValido(boleto.pago) && boleto.pago > 0 ? 'status-pago' : ''}">${formatarMoeda(boleto.pago)}</td>
                             <td class="valor-cell ${valorValido(boleto.resta) && boleto.resta > 0 ? 'status-pendente' : ''}">${formatarMoeda(boleto.resta)}</td>
                             <td>${dataVencimento}</td>
@@ -626,7 +805,7 @@
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                tbody.innerHTML = `<tr><td colspan="9"><div class="error-message"><strong>Erro ao buscar dados:</strong> ${error.message}</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10"><div class="error-message"><strong>Erro ao buscar dados:</strong> ${error.message}</div></td></tr>`;
             } finally {
                 btnBuscar.disabled = false;
                 btnBuscar.textContent = 'Buscar';
@@ -639,7 +818,7 @@
             document.getElementById('searchInput').focus();
             document.getElementById('resultInfo').classList.remove('show');
             document.getElementById('statsContainer').style.display = 'none';
-            document.getElementById('corpoTabela').innerHTML = `<tr><td colspan="9"><div class="empty-state"><span class="icon">🔍</span><h3>Digite um CPF, nome ou contato para buscar</h3><p>Os resultados aparecerão aqui</p></div></td></tr>`;
+            document.getElementById('corpoTabela').innerHTML = `<tr><td colspan="10"><div class="empty-state"><span class="icon">🔍</span><h3>Digite um CPF, nome ou contato para buscar</h3><p>Os resultados aparecerão aqui</p></div></td></tr>`;
         }
 
         window.onload = () => {
